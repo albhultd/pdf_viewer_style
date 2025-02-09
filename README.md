@@ -1,39 +1,35 @@
-<!--
-This README describes the package. If you publish this package to pub.dev,
-this README's contents appear on the landing page for your package.
+# pdf_viewer_style
 
-For information about how to write a good package README, see the guide for
-[writing package pages](https://dart.dev/tools/pub/writing-package-pages).
-
-For general information about developing packages, see the Dart guide for
-[creating packages](https://dart.dev/guides/libraries/create-packages)
-and the Flutter guide for
-[developing packages and plugins](https://flutter.dev/to/develop-packages).
--->
-
-TODO: Put a short description of the package here that helps potential users
-know whether this package might be useful for them.
+A customizable Flutter package for viewing PDFs with additional styling options.
 
 ## Features
 
-TODO: List what your package can do. Maybe include images, gifs, or videos.
+- View PDF documents within your Flutter app.
+- Customize the appearance of the PDF viewer.
+- Support for various PDF functionalities like zoom, scroll, and navigation.
 
 ## Getting started
 
-TODO: List prerequisites and provide or point to information on how to
-start using the package.
+To use this package, add `pdf_viewer_style` as a dependency in your `pubspec.yaml` file.
 
-## Usage
+```yaml
+dependencies:
+    pdf_viewer_style: ^0.0.1
 
-TODO: Include short and useful examples for package users. Add longer examples
-to `/example` folder.
+    Then, run flutter pub get to install the package.
 
-```dart
-const like = 'sample';
+Usage
+Here is a simple example of how to use the pdf_viewer_style package:
+COMING SOON
+
+Additional information
+For more information, visit the homepage.
+
+To contribute to this package, please visit the repository and check the issue tracker for open issues.
+
+If you encounter any issues or have any questions, feel free to file an issue on the issue tracker. The package authors will respond as soon as possible.
+
 ```
 
-## Additional information
+This README includes a short description, features, getting started instructions, usage example, and additional information about the package.
 
-TODO: Tell users more about the package: where to find more information, how to
-contribute to the package, how to file issues, what response they can expect
-from the package authors, and more.
