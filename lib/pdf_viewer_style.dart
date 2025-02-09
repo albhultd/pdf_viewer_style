@@ -88,11 +88,9 @@ class _CustomPdfViewerState extends State<CustomPdfViewer> {
         if (snapshot.hasError) {
           return Center(child: Text('Hiba: ${snapshot.error}'));
         }
-
-        if (_pdfController == null) {
+        if (snapshot.hasData && _pdfController == null) {
           _initializePdfViewer(snapshot.data!);
         }
-
         return Container(
           padding: widget.style?.padding ?? EdgeInsets.zero,
           decoration: widget.style?.containerDecoration ?? BoxDecoration(),
@@ -103,6 +101,7 @@ class _CustomPdfViewerState extends State<CustomPdfViewer> {
                   onPageChanged: (page) {
                     widget.onPageChanged?.call(page);
                   },
+                  
                 )
               : const Center(child: CircularProgressIndicator()),
         );
