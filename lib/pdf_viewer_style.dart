@@ -1,25 +1,14 @@
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
+import 'package:pdfx/pdfx.dart';
 
-/// A PDF nézegető megjelenésének testreszabásához használt osztály.
+/// A PDF nézegető testreszabásához használt osztály.
 class PdfViewerStyle {
-  /// A nézegető konténerének dekorációja.
-  /// Például keret nélküli megjelenítéshez: Border.fromBorderSide(BorderSide.none).
   final BoxDecoration? containerDecoration;
-
-  /// A konténer belső margója.
   final EdgeInsets? padding;
-
-  /// A konténer háttérszíne.
   final Color? backgroundColor;
-
-  /// Opcionális zoom faktor, ha a natív implementáció ezt támogatná.
   final double? zoomFactor;
-
-  /// Egyedi ikon asset elérési útja.
-  /// (Pl. Androidon: az adott drawable asset neve, iOS-en pedig az asset neve.)
   final String? customIcon;
 
   const PdfViewerStyle({
@@ -31,27 +20,18 @@ class PdfViewerStyle {
   });
 }
 
-/// Egy aszinkron PDF nézegető widget, amely a megadott forrásból tölti le a PDF fájlt,
-/// majd a letöltött adatokat a stílusban megadott paraméterekkel jeleníti meg.
-/// 
-/// FIGYELMEZTETÉS: Ebben a példában nem történik tényleges PDF renderelés, csupán
-/// egy egyszerű demonstráció a PDF letöltésére és az opciók (pl. egyedi ikon) alkalmazására.
+/// Egy aszinkron PDF nézegető widget, amely bármilyen méretben elhelyezhető.
 class CustomPdfViewer extends StatefulWidget {
-  /// A PDF forrása: lehet URL, asset vagy akár fájl elérési út.
   final String pdfSource;
-
-  /// A PDF nézegető testreszabásához használt stílus.
   final PdfViewerStyle? style;
-
-  /// Opcionális callback, amelyet oldalváltásnál lehet meghívni.
   final void Function(int currentPage)? onPageChanged;
 
   const CustomPdfViewer({
-    Key? key,
+    super.key,
     required this.pdfSource,
     this.style,
     this.onPageChanged,
-  }) : super(key: key);
+  });
 
   @override
   State<CustomPdfViewer> createState() => _CustomPdfViewerState();
@@ -59,6 +39,7 @@ class CustomPdfViewer extends StatefulWidget {
 
 class _CustomPdfViewerState extends State<CustomPdfViewer> {
   late Future<Uint8List> _pdfDataFuture;
+  PdfController? _pdfController;
 
   @override
   void initState() {
@@ -66,9 +47,7 @@ class _CustomPdfViewerState extends State<CustomPdfViewer> {
     _pdfDataFuture = _loadPdfData();
   }
 
-  /// Aszinkron módon letölti a PDF fájl adatait.
-  /// Ha a pdfSource URL, akkor HTTP GET kéréssel tölti le,
-  /// egyébként az assetből olvassa be az adatokat.
+  /// PDF betöltése URL-ről vagy assetből.
   Future<Uint8List> _loadPdfData() async {
     if (widget.pdfSource.startsWith('http')) {
       final response = await http.get(Uri.parse(widget.pdfSource));
@@ -83,43 +62,49 @@ class _CustomPdfViewerState extends State<CustomPdfViewer> {
     }
   }
 
+  /// PDF betöltése a `pdfx`-be, ha sikeresen letöltődött.
+  void _initializePdfViewer(Uint8List pdfData) {
+    setState(() {
+      _pdfController = PdfController(
+        document: PdfDocument.openData(pdfData),
+      );
+    });
+  }
+
+  @override
+  void dispose() {
+    _pdfController?.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<Uint8List>(
       future: _pdfDataFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          // Betöltés alatt: egy körkörös progress indicator jelenik meg.
           return const Center(child: CircularProgressIndicator());
         }
         if (snapshot.hasError) {
-          // Hiba esetén a hibaüzenet jelenik meg.
           return Center(child: Text('Hiba: ${snapshot.error}'));
         }
 
-        // Itt a letöltött PDF adatokat használhatnád fel a tényleges PDF rendereléshez.
-        // Példánkban csak a letöltött byte-ok számát jelenítjük meg.
+        if (_pdfController == null) {
+          _initializePdfViewer(snapshot.data!);
+        }
+
         return Container(
-          padding: widget.style?.padding ?? const EdgeInsets.all(8),
-          decoration: widget.style?.containerDecoration,
+          padding: widget.style?.padding ?? EdgeInsets.zero,
+          decoration: widget.style?.containerDecoration ?? BoxDecoration(),
           color: widget.style?.backgroundColor ?? Colors.white,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Ha van megadva egyedi ikon, azt megjelenítjük.
-              if (widget.style?.customIcon != null)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 8.0),
-                  child: Image.asset(widget.style!.customIcon!),
-                ),
-              Text(
-                'PDF sikeresen letöltve.\nMéret: ${snapshot.data!.lengthInBytes} byte',
-                textAlign: TextAlign.center,
-              ),
-              // Itt adhatsz hozzá további UI elemeket,
-              // illetve implementálhatod az oldalváltás eseményét is.
-            ],
-          ),
+          child: _pdfController != null
+              ? PdfView(
+                  controller: _pdfController!,
+                  onPageChanged: (page) {
+                    widget.onPageChanged?.call(page);
+                  },
+                )
+              : const Center(child: CircularProgressIndicator()),
         );
       },
     );
